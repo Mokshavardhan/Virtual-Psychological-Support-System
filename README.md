@@ -212,10 +212,10 @@ future_scope:
 ################################################################################
 
 author:
-  name: "Manish Reddy"
+  name: "Mokshavardhan"
   role: "Backend & AI Integration"
   degree: "B.Tech Computer Science Engineering"
-  github: "https://github.com/manishreddy731"
+  github: "https://github.com/Mokshavardhan"
 
 ################################################################################
 # ⚠️ DISCLAIMER
