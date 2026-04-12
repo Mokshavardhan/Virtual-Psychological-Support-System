@@ -213,7 +213,7 @@ future_scope:
 
 author:
   name: "Mokshavardhan"
-  role: "Backend & AI Integration"
+  role: "Backend & AI Integration "
   degree: "B.Tech Computer Science Engineering"
   github: "https://github.com/Mokshavardhan"
 
