@@ -21,7 +21,7 @@ env:
   - variable: VITE_FIREBASE_MEASUREMENT_ID
     value: "G-N7SVR20WV4"
   - variable: VITE_API_URL
-    value: "https://your-backend-url.com/api" # Update this with your real backend URL
+    value: "/api"
 
 # Build configuration
 build:

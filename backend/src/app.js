@@ -48,20 +48,30 @@ app.get('/health', (_req, res) => {
 // -----------------------------------------------------------------------------
 // Public routes (NO AUTH REQUIRED)
 // -----------------------------------------------------------------------------
-app.use('/auth', authRouter);
+app.use('/api/auth', authRouter);
 
 // -----------------------------------------------------------------------------
 // Protected routes (AUTH REQUIRED)
 // -----------------------------------------------------------------------------
-app.use('/chat', requireAuth, chatRouter);
-app.use('/assessments', requireAuth, assessmentsRouter);
-app.use('/suggestions', requireAuth, suggestionsRouter);
-app.use('/actions', requireAuth, actionsRouter);
-app.use('/dashboard', requireAuth, statsRouter);
-app.use('/journal', requireAuth, journalRouter);
+app.use('/api/chat', requireAuth, chatRouter);
+app.use('/api/assessments', requireAuth, assessmentsRouter);
+app.use('/api/suggestions', requireAuth, suggestionsRouter);
+app.use('/api/actions', requireAuth, actionsRouter);
+app.use('/api/dashboard', requireAuth, statsRouter);
+app.use('/api/journal', requireAuth, journalRouter);
 
 // admin (can add role checks later)
-app.use('/admin', requireAuth, adminRouter);
+app.use('/api/admin', requireAuth, adminRouter);
+
+// -----------------------------------------------------------------------------
+// Serve Frontend Static Files
+// -----------------------------------------------------------------------------
+const frontendPath = path.join(__dirname, '../../../frontend/dist');
+app.use(express.static(frontendPath));
+
+app.get('*', (req, res) => {
+  res.sendFile(path.join(frontendPath, 'index.html'));
+});
 
 // -----------------------------------------------------------------------------
 // Global error handler (redacted)
