@@ -7,6 +7,10 @@
     "backend"
   ],
   "scripts": {
-    "build": "npm run build -w frontend"
+    "build": "npm run build -w frontend",
+    "start": "serve -s frontend/dist -l ${PORT:-8080}"
+  },
+  "dependencies": {
+    "serve": "^14.2.4"
   }
 }
