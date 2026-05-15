@@ -2,10 +2,11 @@
   "name": "vista-project",
   "version": "1.0.0",
   "private": true,
+  "workspaces": [
+    "frontend",
+    "backend"
+  ],
   "scripts": {
-    "build": "npm run build --prefix frontend",
-    "frontend:install": "npm install --prefix frontend",
-    "backend:install": "npm install --prefix backend",
-    "install-all": "npm run frontend:install && npm run backend:install"
+    "build": "npm run build -w frontend"
   }
 }
