@@ -1,0 +1,31 @@
+# Firebase App Hosting configuration
+# See https://firebase.google.com/docs/app-hosting/configure
+
+kind: "AppHostingYaml"
+schemaVersion: "v1"
+
+# Environment variables for the build and runtime
+env:
+  - variable: VITE_FIREBASE_API_KEY
+    value: "AIzaSyBv8DS4eqWsLBlCPzzVeKZ0GglNyvasfJE"
+  - variable: VITE_FIREBASE_AUTH_DOMAIN
+    value: "vista-15739.firebaseapp.com"
+  - variable: VITE_FIREBASE_PROJECT_ID
+    value: "vista-15739"
+  - variable: VITE_FIREBASE_STORAGE_BUCKET
+    value: "vista-15739.firebasestorage.app"
+  - variable: VITE_FIREBASE_MESSAGING_SENDER_ID
+    value: "350433205494"
+  - variable: VITE_FIREBASE_APP_ID
+    value: "1:350433205494:web:f637d65d4830572abfa0d7"
+  - variable: VITE_FIREBASE_MEASUREMENT_ID
+    value: "G-N7SVR20WV4"
+  - variable: VITE_API_URL
+    value: "https://your-backend-url.com/api" # Update this with your real backend URL
+
+# Build configuration
+build:
+  # The directory where the built assets are located
+  outputDirectory: "frontend/dist"
+  # The command to build the app
+  buildCommand: "npm run build --prefix frontend"
