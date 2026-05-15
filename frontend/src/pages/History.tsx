@@ -289,16 +289,30 @@ export default function History() {
                                         <FileText size={16} /> Your Responses
                                     </div>
                                     <div className="space-y-3">
-                                        {Object.entries(selectedAssessment.answers).map(([qid, value]) => (
-                                            <div key={qid} className="p-4 bg-gray-50 rounded-2xl">
-                                                <p className="font-medium text-text text-sm mb-2">
-                                                    {QUESTION_MAP[qid] || `Question ${qid.split('_q')[1]}`}
-                                                </p>
-                                                <p className="font-bold text-primary">
-                                                    {value} - {ANSWER_MAP[value] || 'N/A'}
-                                                </p>
-                                            </div>
-                                        ))}
+                                        {Object.entries(selectedAssessment.answers).map(([idx, val]) => {
+                                            let text = `Question ${Number(idx) + 1}`;
+                                            let score = val;
+
+                                            // If the value is an object (new format), use its text and score
+                                            if (typeof val === 'object' && val !== null) {
+                                                text = (val as any).text || text;
+                                                score = (val as any).score;
+                                            } else if (QUESTION_MAP[idx]) {
+                                                // Fallback to static QUESTION_MAP for old string keys if they somehow exist
+                                                text = QUESTION_MAP[idx];
+                                            }
+
+                                            return (
+                                                <div key={idx} className="p-4 bg-gray-50 rounded-2xl">
+                                                    <p className="font-medium text-text text-sm mb-2">
+                                                        {text}
+                                                    </p>
+                                                    <p className="font-bold text-primary">
+                                                        {score as number} - {ANSWER_MAP[score as number] || 'N/A'}
+                                                    </p>
+                                                </div>
+                                            );
+                                        })}
                                     </div>
                                 </div>
                             </div>

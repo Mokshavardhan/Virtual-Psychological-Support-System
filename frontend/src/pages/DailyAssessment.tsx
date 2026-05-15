@@ -43,7 +43,7 @@ export default function DailyAssessment() {
         e.preventDefault();
         setLoading(true);
         try {
-            await submitAssessment('daily', finalAnswers);
+            await submitAssessment('daily', finalAnswers, questions);
             // Redirect immediately to dashboard to reflect changes
             navigate('/dashboard');
         } catch (error) {

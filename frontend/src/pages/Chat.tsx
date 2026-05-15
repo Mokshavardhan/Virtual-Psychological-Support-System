@@ -277,7 +277,7 @@ export default function Chat() {
             // Submit assessment
             setIsLoading(true);
             try {
-                const response = await submitAssessment(assessment.type, newAnswers);
+                const response = await submitAssessment(assessment.type, newAnswers, assessment.questions);
                 setAssessment(prev => ({ ...prev, active: false })); // End assessment mode
 
                 // Add result message

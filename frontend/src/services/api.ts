@@ -224,14 +224,24 @@ export async function startAssessment(type: string): Promise<ChatResponse> {
     }
 }
 
-export async function submitAssessment(type: string, answers: Record<string, number>): Promise<ChatResponse> {
+export async function submitAssessment(type: string, answers: Record<string, number>, questions?: Question[]): Promise<ChatResponse> {
     try {
         // Convert record to array of values for backend
         // Assuming keys are '0', '1', '2' indices from the questions array
-        // Fix: Sort numerically to avoid '1', '10', '2' sorting issues
+        // Send object with text if questions are provided, otherwise just number for backward compatibility
         const answersArray = Object.keys(answers)
             .sort((a, b) => Number(a) - Number(b))
-            .map(k => answers[k]);
+            .map(k => {
+                if (questions) {
+                    const q = questions.find(q => q.id === k);
+                    return {
+                        questionId: k,
+                        text: q ? q.text : `Question ${k}`,
+                        score: answers[k]
+                    };
+                }
+                return answers[k];
+            });
 
         const response = await fetch(`${API_URL}/assessments/submit`, {
             method: 'POST',

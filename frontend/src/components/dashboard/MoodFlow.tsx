@@ -4,6 +4,7 @@ import { Activity } from 'lucide-react';
 import { useState, useMemo } from 'react';
 import { useAmbience } from '../../context/AmbienceContext';
 import type { AssessmentResult } from '../../services/api';
+import { getNormalizedHealthScore } from '../../lib/utils';
 
 interface MoodFlowProps {
     assessments?: AssessmentResult[];
@@ -65,8 +66,10 @@ export default function MoodFlow({ assessments = [] }: MoodFlowProps) {
         }
     }, [assessments, view]);
 
-    const dataPoints = chartData.map(a => a.score ?? 0); // Default to 0 for unattempted days
-    const hasData = dataPoints.length > 0;
+    // Normalize scores to a 0-100 "Health %" scale instead of using raw scores
+    const dataPoints = chartData.map(a => a.id && a.id.startsWith('empty') ? 0 : getNormalizedHealthScore(a as AssessmentResult));
+    const rawScores = chartData.map(a => a.score ?? 0); // Keep raw scores for labels
+    const hasData = rawScores.some(s => s > 0);
 
     // SVG Chart Dimensions
     const width = 600;
@@ -176,11 +179,11 @@ export default function MoodFlow({ assessments = [] }: MoodFlowProps) {
                                     textAnchor="middle"
                                     className="text-[11px] font-bold fill-gray-700"
                                 >
-                                    {Math.round(dataPoints[i])}
+                                    {Math.round(rawScores[i])}
                                 </text>
 
                                 {/* Tooltip on hover */}
-                                <title>{chartData[i].type}: {dataPoints[i]}</title>
+                                <title>{chartData[i].type || chartData[i].assessment}: {rawScores[i]} (Health: {Math.round(dataPoints[i])}%)</title>
                             </g>
                         ))}
                     </svg>

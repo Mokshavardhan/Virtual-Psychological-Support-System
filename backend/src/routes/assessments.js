@@ -122,7 +122,16 @@ router.get('/:type', async (req, res) => {
 // -----------------------------------------------------------------------------
 const submitSchema = z.object({
   type: z.string(),
-  answers: z.array(z.number().min(0).max(10))
+  answers: z.array(
+    z.union([
+      z.number().min(0).max(10), // legacy format
+      z.object({
+        questionId: z.string().optional(),
+        text: z.string().optional(),
+        score: z.number().min(0).max(10)
+      })
+    ])
+  )
 });
 
 router.post('/submit', async (req, res) => {
@@ -157,7 +166,8 @@ router.post('/submit', async (req, res) => {
     // ---------------------------------------------------------------------------
     // Score assessment
     // ---------------------------------------------------------------------------
-    const score = scoreLikert(answers);
+    const numericalScores = answers.map(a => typeof a === 'number' ? a : a.score);
+    const score = scoreLikert(numericalScores);
 
     let severity = 'unknown';
     if (type === 'phq9') severity = interpretPHQ9(score);

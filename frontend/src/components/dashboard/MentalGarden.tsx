@@ -1,7 +1,7 @@
 import { useMemo } from 'react';
 import { Card } from '../ui/Card';
 import { Sprout } from 'lucide-react';
-import { cn } from '../../lib/utils';
+import { cn, getNormalizedHealthScore } from '../../lib/utils';
 import type { AssessmentResult } from '../../services/api';
 import { useAmbience } from '../../context/AmbienceContext';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -15,7 +15,7 @@ export default function MentalGarden({ latestAssessment }: MentalGardenProps) {
     const { theme } = useAmbience();
 
     const data = useMemo(() => {
-        const base = latestAssessment?.score || 50;
+        const base = latestAssessment ? getNormalizedHealthScore(latestAssessment) : 50;
 
         // Mapping psychological traits - normalized to 0-10 scale
         return [
@@ -246,10 +246,10 @@ export default function MentalGarden({ latestAssessment }: MentalGardenProps) {
                                     className="text-center relative z-10"
                                 >
                                     <span className="text-[2rem] leading-none font-serif font-bold text-[#1a3a3a] tracking-tight">
-                                        {Math.round(latestAssessment?.score || 0)}
+                                        {latestAssessment ? Math.round(getNormalizedHealthScore(latestAssessment)) : 0}%
                                     </span>
                                     <span className="block text-[0.6rem] font-normal text-emerald-600/50 uppercase tracking-[0.3em] -mt-1.5">
-                                        Score
+                                        Health
                                     </span>
                                 </motion.div>
                             </div>
