@@ -66,7 +66,7 @@ app.use('/api/admin', requireAuth, adminRouter);
 // -----------------------------------------------------------------------------
 // Serve Frontend Static Files
 // -----------------------------------------------------------------------------
-const frontendPath = path.join(__dirname, '../../../frontend/dist');
+const frontendPath = path.join(__dirname, '../../frontend/dist');
 app.use(express.static(frontendPath));
 
 app.get('*', (req, res) => {
