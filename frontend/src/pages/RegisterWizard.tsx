@@ -2,7 +2,9 @@ import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { ChevronRight, Check, User, Heart, Shield, Sparkles } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
-import { register as apiRegister, type UserProfile } from '../services/api';
+import { loginWithFirebase, type UserProfile } from '../services/api';
+import { auth } from '../lib/firebase';
+import { createUserWithEmailAndPassword, updateProfile } from 'firebase/auth';
 import { useAmbience } from '../context/AmbienceContext';
 import { Button } from '../components/ui/Button';
 import { Input } from '../components/ui/Input';
@@ -71,7 +73,17 @@ export default function RegisterWizard() {
         setError('');
 
         try {
-            // Prepare data
+            // 1. Create user in Firebase
+            const userCredential = await createUserWithEmailAndPassword(auth, formData.email, formData.password);
+            const firebaseUser = userCredential.user;
+
+            // 2. Update Firebase display name
+            await updateProfile(firebaseUser, { displayName: formData.name });
+
+            // 3. Get ID Token
+            const idToken = await firebaseUser.getIdToken();
+
+            // 4. Prepare profile data for backend
             const profileData: Partial<UserProfile> = {
                 role: formData.role,
                 location: formData.location,
@@ -83,11 +95,17 @@ export default function RegisterWizard() {
                 contact_phone: formData.contact_phone
             };
 
-            const response = await apiRegister(formData.name, formData.email, formData.password, profileData);
+            // 5. Sync with backend
+            const response = await loginWithFirebase(idToken, profileData);
             login(response.token, response.user);
             navigate('/dashboard');
         } catch (err: any) {
-            setError(err.message || 'Registration failed');
+            console.error('Registration error:', err);
+            let message = 'Registration failed';
+            if (err.code === 'auth/email-already-in-use') message = 'Email already exists';
+            if (err.code === 'auth/invalid-email') message = 'Invalid email address';
+            if (err.code === 'auth/weak-password') message = 'Password is too weak';
+            setError(err.message || message);
         } finally {
             setIsLoading(false);
         }

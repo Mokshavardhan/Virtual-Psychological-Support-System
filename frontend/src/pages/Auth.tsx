@@ -7,12 +7,31 @@ import { useAmbience } from '../context/AmbienceContext';
 import { cn } from '../lib/utils';
 
 import { useAuth } from '../context/AuthContext';
+import { auth, googleProvider } from '../lib/firebase';
+import { signInWithEmailAndPassword, signInWithPopup, RecaptchaVerifier, signInWithPhoneNumber } from 'firebase/auth';
+import { loginWithFirebase, forgotPassword, resetPassword } from '../services/api';
+import { Phone, Hash, Globe } from 'lucide-react';
 
-import { login as apiLogin, register as apiRegister, forgotPassword, resetPassword } from '../services/api';
+const COUNTRY_CODES = [
+    { code: '+91', country: 'IN', name: 'India' },
+    { code: '+1', country: 'US', name: 'USA' },
+    { code: '+44', country: 'GB', name: 'UK' },
+    { code: '+61', country: 'AU', name: 'Australia' },
+    { code: '+81', country: 'JP', name: 'Japan' },
+    { code: '+49', country: 'DE', name: 'Germany' },
+    { code: '+33', country: 'FR', name: 'France' },
+    { code: '+971', country: 'AE', name: 'UAE' },
+    { code: '+65', country: 'SG', name: 'Singapore' },
+    { code: '+1', country: 'CA', name: 'Canada' },
+];
 
 export default function Auth() {
     const [isLogin, setIsLogin] = useState(true);
     const [forgotPasswordStage, setForgotPasswordStage] = useState<'none' | 'email' | 'otp'>('none');
+    const [authMethod, setAuthMethod] = useState<'email' | 'phone'>('email');
+    const [phone, setPhone] = useState('');
+    const [countryCode, setCountryCode] = useState('+91');
+    const [verificationId, setVerificationId] = useState<any>(null);
     const [otp, setOtp] = useState('');
     const [newPassword, setNewPassword] = useState('');
     
@@ -63,21 +82,64 @@ export default function Auth() {
                 return;
             }
 
+            if (authMethod === 'phone') {
+                if (!verificationId) {
+                    // Send OTP
+                    const recaptchaVerifier = new RecaptchaVerifier(auth, 'recaptcha-container', {
+                        'size': 'invisible'
+                    });
+                    const fullPhoneNumber = `${countryCode}${phone.replace(/^\+/, '')}`;
+                    const confirmationResult = await signInWithPhoneNumber(auth, fullPhoneNumber, recaptchaVerifier);
+                    setVerificationId(confirmationResult);
+                    setSuccessMessage(`OTP sent to ${fullPhoneNumber}`);
+                } else {
+                    // Verify OTP
+                    const result = await verificationId.confirm(otp);
+                    const idToken = await result.user.getIdToken();
+                    const data = await loginWithFirebase(idToken);
+                    login(data.token, data.user);
+                    navigate('/dashboard');
+                }
+                return;
+            }
+
             if (isLogin) {
-                const data = await apiLogin(formData.email, formData.password);
+                // 1. Sign in with Firebase
+                const userCredential = await signInWithEmailAndPassword(auth, formData.email, formData.password);
+                const firebaseUser = userCredential.user;
+                
+                // 2. Get ID Token
+                const idToken = await firebaseUser.getIdToken();
+
+                // 3. Sync with backend
+                const data = await loginWithFirebase(idToken);
                 login(data.token, data.user);
             } else {
-                if (formData.password !== formData.confirmPassword) {
-                    setError('Passwords do not match');
-                    return;
-                }
-                const generatedName = formData.email.split('@')[0];
-                const data = await apiRegister(generatedName, formData.email, formData.password);
-                login(data.token, data.user);
+                // If they are on this page and click "Create Account", we should redirect to /register
+                navigate('/register');
+                return;
             }
             navigate('/dashboard');
         } catch (err: any) {
-            setError(err.message || 'Authentication failed');
+            console.error('Auth error:', err);
+            let message = 'Authentication failed';
+            if (err.code === 'auth/user-not-found' || err.code === 'auth/wrong-password') message = 'Invalid email or password';
+            if (err.code === 'auth/invalid-credential') message = 'Invalid credentials';
+            if (err.code === 'auth/invalid-phone-number') message = 'Invalid phone number';
+            setError(err.message || message);
+        }
+    };
+
+    const handleGoogleLogin = async () => {
+        try {
+            const result = await signInWithPopup(auth, googleProvider);
+            const idToken = await result.user.getIdToken();
+            const data = await loginWithFirebase(idToken);
+            login(data.token, data.user);
+            navigate('/dashboard');
+        } catch (err: any) {
+            console.error('Google login error:', err);
+            setError(err.message || 'Google login failed');
         }
     };
 
@@ -272,72 +334,167 @@ export default function Auth() {
                                     </Button>
                                 </>
                             ) : (
-                                /* Normal Login / Register Flow */
                                 <>
+                                    {/* Normal Login / Register Flow */}
+                                    {authMethod === 'email' && forgotPasswordStage === 'none' && (
+                                        <>
+                                            <div className="space-y-1.5">
+                                                <label className="text-xs font-bold text-gray-900 uppercase tracking-widest pl-1">Email</label>
+                                                <Input
+                                                    type="email"
+                                                    placeholder="name@example.com"
+                                                    required
+                                                    value={formData.email}
+                                                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                                                    className="h-12 rounded-xl bg-gray-50 border-gray-200 focus:bg-white focus:ring-2 focus:ring-black/5 focus:border-gray-400 transition-all font-medium"
+                                                />
+                                            </div>
 
+                                            <div className="space-y-1.5">
+                                                <label className="text-xs font-bold text-gray-900 uppercase tracking-widest pl-1">Password</label>
+                                                <Input
+                                                    type="password"
+                                                    placeholder="••••••••"
+                                                    required
+                                                    value={formData.password}
+                                                    onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                                                    className="h-12 rounded-xl bg-gray-50 border-gray-200 focus:bg-white focus:ring-2 focus:ring-black/5 focus:border-gray-400 transition-all font-medium"
+                                                />
+                                            </div>
 
-                                    <div className="space-y-1.5">
-                                        <label className="text-xs font-bold text-gray-900 uppercase tracking-widest pl-1">Email</label>
-                                        <Input
-                                            type="email"
-                                            placeholder="name@example.com"
-                                            required
-                                            value={formData.email}
-                                            onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                                            className="h-12 rounded-xl bg-gray-50 border-gray-200 focus:bg-white focus:ring-2 focus:ring-black/5 focus:border-gray-400 transition-all font-medium"
-                                        />
-                                    </div>
+                                            {/* Forgot Password Text Link below password field for login ONLY */}
+                                            {isLogin && (
+                                                <div className="flex justify-end">
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => {
+                                                            setForgotPasswordStage('email');
+                                                            setError('');
+                                                        }}
+                                                        className="text-xs font-bold text-gray-500 hover:text-gray-900 transition-colors"
+                                                    >
+                                                        Forgot Password?
+                                                    </button>
+                                                </div>
+                                            )}
 
-                                    <div className="space-y-1.5">
-                                        <label className="text-xs font-bold text-gray-900 uppercase tracking-widest pl-1">Password</label>
-                                        <Input
-                                            type="password"
-                                            placeholder="••••••••"
-                                            required
-                                            value={formData.password}
-                                            onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                                            className="h-12 rounded-xl bg-gray-50 border-gray-200 focus:bg-white focus:ring-2 focus:ring-black/5 focus:border-gray-400 transition-all font-medium"
-                                        />
-                                    </div>
-
-                                    {/* Forgot Password Text Link below password field for login ONLY */}
-                                    {isLogin && (
-                                        <div className="flex justify-end">
-                                            <button
-                                                type="button"
-                                                onClick={() => {
-                                                    setForgotPasswordStage('email');
-                                                    setError('');
-                                                }}
-                                                className="text-xs font-bold text-gray-500 hover:text-gray-900 transition-colors"
+                                            <Button
+                                                className={cn("w-full h-12 text-base font-bold tracking-wide rounded-xl text-white shadow-lg transition-all transform hover:-translate-y-0.5 mt-4", buttonClass)}
                                             >
-                                                Forgot Password?
-                                            </button>
-                                        </div>
+                                                {isLogin ? 'Sign In' : 'Create Account'}
+                                            </Button>
+                                        </>
                                     )}
 
-                                    {!isLogin && (
-                                        <div className="space-y-1.5">
-                                            <label className="text-xs font-bold text-gray-900 uppercase tracking-widest pl-1">Confirm Password</label>
-                                            <Input
-                                                type="password"
-                                                placeholder="••••••••"
-                                                required
-                                                value={formData.confirmPassword}
-                                                onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
-                                                className="h-12 rounded-xl bg-gray-50 border-gray-200 focus:bg-white focus:ring-2 focus:ring-black/5 focus:border-gray-400 transition-all font-medium"
-                                            />
-                                        </div>
-                                    )}
+                                    {/* Phone Auth Flow */}
+                                    {authMethod === 'phone' && (
+                                        <>
+                                            {!verificationId ? (
+                                                <div className="space-y-1.5">
+                                                    <label className="text-xs font-bold text-gray-900 uppercase tracking-widest pl-1">Phone Number</label>
+                                                    <div className="flex gap-2">
+                                                        <div className="relative min-w-[110px]">
+                                                            <select 
+                                                                value={countryCode}
+                                                                onChange={(e) => setCountryCode(e.target.value)}
+                                                                className="w-full h-12 rounded-xl bg-gray-50 border border-gray-200 px-3 text-sm font-bold appearance-none focus:outline-none focus:ring-2 focus:ring-black/5"
+                                                            >
+                                                                {COUNTRY_CODES.map(c => (
+                                                                    <option key={`${c.country}-${c.code}`} value={c.code}>{c.country} ({c.code})</option>
+                                                                ))}
+                                                            </select>
+                                                            <Globe size={14} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
+                                                        </div>
+                                                        <Input
+                                                            type="tel"
+                                                            placeholder="98765 43210"
+                                                            required
+                                                            value={phone}
+                                                            onChange={(e) => setPhone(e.target.value)}
+                                                            className="h-12 rounded-xl bg-gray-50 border-gray-200 focus:bg-white focus:ring-2 focus:ring-black/5 focus:border-gray-400 transition-all font-medium flex-1"
+                                                        />
+                                                    </div>
+                                                    <p className="text-[10px] text-gray-400 mt-1">We'll send a code to verify your phone.</p>
+                                                </div>
+                                            ) : (
+                                                <div className="space-y-1.5">
+                                                    <label className="text-xs font-bold text-gray-900 uppercase tracking-widest pl-1">6-Digit OTP</label>
+                                                    <Input
+                                                        type="text"
+                                                        placeholder="123456"
+                                                        required
+                                                        value={otp}
+                                                        onChange={(e) => setOtp(e.target.value)}
+                                                        className="h-12 rounded-xl bg-gray-50 border-gray-200 focus:bg-white focus:ring-2 focus:ring-black/5 focus:border-gray-400 transition-all font-medium text-center tracking-widest text-lg"
+                                                        maxLength={6}
+                                                    />
+                                                </div>
+                                            )}
 
-                                    <Button
-                                        className={cn("w-full h-12 text-base font-bold tracking-wide rounded-xl text-white shadow-lg transition-all transform hover:-translate-y-0.5 mt-4", buttonClass)}
-                                    >
-                                        {isLogin ? 'Sign In' : 'Create Account'}
-                                    </Button>
+                                            <div id="recaptcha-container"></div>
+
+                                            <Button
+                                                className={cn("w-full h-12 text-base font-bold tracking-wide rounded-xl text-white shadow-lg transition-all transform hover:-translate-y-0.5 mt-4", buttonClass)}
+                                            >
+                                                {!verificationId ? 'Send OTP' : 'Verify & Sign In'}
+                                            </Button>
+                                            
+                                            {verificationId && (
+                                                <button 
+                                                    type="button"
+                                                    onClick={() => {
+                                                        setVerificationId(null);
+                                                        setOtp('');
+                                                    }}
+                                                    className="w-full text-center text-xs font-bold text-gray-500 mt-4 hover:text-gray-900"
+                                                >
+                                                    Change Phone Number
+                                                </button>
+                                            )}
+                                        </>
+                                    )}
                                 </>
                             )}
                         </form>
+
+                        {forgotPasswordStage === 'none' && (
+                            <div className="relative my-6">
+                                <div className="absolute inset-0 flex items-center">
+                                    <div className="w-full border-t border-gray-200"></div>
+                                </div>
+                                <div className="relative flex justify-center text-xs uppercase">
+                                    <span className="bg-white px-2 text-gray-500 font-bold tracking-widest">Or continue with</span>
+                                </div>
+                            </div>
+                        )}
+
+                        {forgotPasswordStage === 'none' && (
+                            <div className="grid grid-cols-2 gap-4">
+                                <Button
+                                    type="button"
+                                    variant="outline"
+                                    onClick={handleGoogleLogin}
+                                    className="w-full h-12 rounded-xl border-gray-200 hover:bg-gray-50 flex items-center justify-center gap-3 font-bold transition-all"
+                                >
+                                    <img src="https://www.gstatic.com/images/branding/product/1x/googleg_48dp.png" alt="Google" className="w-5 h-5" />
+                                    Google
+                                </Button>
+                                
+                                <Button
+                                    type="button"
+                                    variant="outline"
+                                    onClick={() => {
+                                        setAuthMethod(authMethod === 'email' ? 'phone' : 'email');
+                                        setError('');
+                                        setSuccessMessage('');
+                                    }}
+                                    className="w-full h-12 rounded-xl border-gray-200 hover:bg-gray-50 flex items-center justify-center gap-3 font-bold transition-all"
+                                >
+                                    {authMethod === 'email' ? <Phone size={18} /> : <Hash size={18} />}
+                                    {authMethod === 'email' ? 'Phone' : 'Email'}
+                                </Button>
+                            </div>
+                        )}
 
 
 

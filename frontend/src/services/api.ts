@@ -116,6 +116,15 @@ export async function loginWithGitHub(code: string): Promise<any> {
     return handleApiResponse(response, 'GitHub login failed');
 }
 
+export async function loginWithFirebase(idToken: string, profileData?: any): Promise<any> {
+    const response = await fetch(`${API_URL}/auth/firebase`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ idToken, profileData })
+    });
+    return handleApiResponse(response, 'Firebase authentication failed');
+}
+
 export async function sendMessage(text: string): Promise<ChatResponse> {
     try {
         const response = await fetch(`${API_URL}/chat`, {

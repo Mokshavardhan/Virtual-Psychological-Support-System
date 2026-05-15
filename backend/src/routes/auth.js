@@ -5,6 +5,7 @@ import { z } from 'zod';
 import { verifyGoogleToken } from '../services/auth.js';
 import { signToken, verifyToken } from '../services/jwt.js';
 import { User } from '../models/User.js';
+import { verifyIdToken } from '../services/firebase-admin.js';
 import nodemailer from 'nodemailer';
 import crypto from 'crypto';
 
@@ -62,6 +63,11 @@ const registerSchema = z.object({
 
 const googleSchema = z.object({
   idToken: z.string().min(10)
+});
+
+const firebaseAuthSchema = z.object({
+  idToken: z.string().min(10),
+  profileData: registerSchema.omit({ email: true, password: true, name: true }).optional()
 });
 
 // Middleware to verify token and attach user to request
@@ -152,6 +158,68 @@ router.post('/register', async (req, res, next) => {
       return res.status(400).json({ error: err.errors });
     }
     next(err);
+  }
+});
+
+// Firebase Auth Endpoint (Unified Register/Login)
+router.post('/firebase', async (req, res, next) => {
+  try {
+    const { idToken, profileData } = firebaseAuthSchema.parse(req.body);
+
+    // Verify Firebase Token
+    const decodedToken = await verifyIdToken(idToken);
+    const { uid, email, name, picture, phoneNumber } = decodedToken;
+
+    // For phone users, email might be missing. We'll use a placeholder.
+    const userEmail = email || `${phoneNumber || uid}@phone.vista.app`;
+    const userName = name || phoneNumber || userEmail.split('@')[0];
+
+    let user = await User.findOne({ 
+      $or: [
+        { firebaseUid: uid },
+        { email: userEmail }
+      ]
+    });
+
+    if (!user) {
+      // Create new user if not exists
+      user = new User({
+        firebaseUid: uid,
+        email: userEmail,
+        name: userName,
+        picture: picture,
+        ...profileData
+      });
+      await user.save();
+    } else {
+      // Update existing user with firebaseUid if not set
+      if (!user.firebaseUid) {
+        user.firebaseUid = uid;
+      }
+      // If profileData is provided (e.g. from registration wizard), update it
+      if (profileData) {
+        Object.keys(profileData).forEach(key => {
+          if (profileData[key] !== undefined) {
+            user[key] = profileData[key];
+          }
+        });
+      }
+      await user.save();
+    }
+
+    const jwtToken = signToken({
+      userId: user._id.toString(),
+      email: user.email,
+      name: user.name
+    });
+
+    res.json({
+      token: jwtToken,
+      user: { ...user.toObject(), password: undefined }
+    });
+  } catch (err) {
+    console.error('Firebase auth error:', err);
+    res.status(401).json({ error: 'Authentication failed' });
   }
 });
 
