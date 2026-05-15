@@ -12,16 +12,23 @@ try {
       credential: admin.credential.cert(process.env.FIREBASE_SERVICE_ACCOUNT_PATH)
     });
     console.log('[Firebase Admin] Initialized with service account file');
-  } else if (process.env.FIREBASE_PROJECT_ID) {
+  } else if (process.env.FIREBASE_PRIVATE_KEY) {
     // Fallback to env variables (useful for platforms like Heroku/Render)
     app = admin.initializeApp({
       credential: admin.credential.cert({
         projectId: process.env.FIREBASE_PROJECT_ID,
         clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
-        privateKey: process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n'),
+        privateKey: process.env.FIREBASE_PRIVATE_KEY.replace(/\\n/g, '\n'),
       }),
     });
-    console.log('[Firebase Admin] Initialized with environment variables');
+    console.log('[Firebase Admin] Initialized with explicit environment variables');
+  } else if (process.env.FIREBASE_PROJECT_ID) {
+    // In Google Cloud environments (like App Hosting), ADC works automatically
+    app = admin.initializeApp({
+        credential: admin.credential.applicationDefault(),
+        projectId: process.env.FIREBASE_PROJECT_ID
+    });
+    console.log('[Firebase Admin] Initialized with Application Default Credentials');
   } else {
     console.warn('[Firebase Admin] Not initialized. Missing credentials.');
   }
