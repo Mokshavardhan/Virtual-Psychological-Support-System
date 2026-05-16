@@ -3,8 +3,8 @@ import { cn } from '../../lib/utils';
 import { Activity } from 'lucide-react';
 import { useState, useMemo } from 'react';
 import { useAmbience } from '../../context/AmbienceContext';
-import type { AssessmentResult } from '../../services/api';
 import { getNormalizedHealthScore } from '../../lib/utils';
+import type { AssessmentResult } from '../../services/api';
 
 interface MoodFlowProps {
     assessments?: AssessmentResult[];
@@ -45,6 +45,7 @@ export default function MoodFlow({ assessments = [] }: MoodFlowProps) {
 
                 return existing ? {
                     ...existing,
+                    score: getNormalizedHealthScore(existing),
                     label: date.toLocaleDateString(undefined, { weekday: 'short' })
                 } : {
                     id: `empty-${dateStr}`,
@@ -61,13 +62,14 @@ export default function MoodFlow({ assessments = [] }: MoodFlowProps) {
             // Mock "Weeks" logic: Take last 7 weeks (approx every 7th entry or just sample)
             return sorted.filter((_, i) => i % 5 === 0).slice(-7).map(a => ({
                 ...a,
+                score: getNormalizedHealthScore(a),
                 label: new Date(a.timestamp).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })
             }));
         }
     }, [assessments, view]);
 
-    // Normalize scores to a 0-100 "Health %" scale instead of using raw scores
-    const dataPoints = chartData.map(a => a.id && a.id.startsWith('empty') ? 0 : getNormalizedHealthScore(a as AssessmentResult));
+    // Use raw scores directly on a 0-100 scale
+    const dataPoints = chartData.map(a => a.id && a.id.startsWith('empty') ? 0 : (a.score ?? 0));
     const rawScores = chartData.map(a => a.score ?? 0); // Keep raw scores for labels
     const hasData = rawScores.some(s => s > 0);
 

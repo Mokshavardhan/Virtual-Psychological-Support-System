@@ -151,17 +151,8 @@ router.post('/submit', async (req, res) => {
 
     const userId = req.user.userId;
 
-    // --- ENFORCE ONCE A DAY LIMIT FOR DAILY ASSESSMENT ---
-    if (type === 'daily') {
-      const latest = await getLatestAssessment(userId);
-      if (latest && latest.assessment === 'daily') {
-        const today = new Date().toDateString();
-        const latestDate = new Date(latest.submittedAt).toDateString();
-        if (today === latestDate) {
-          return res.status(400).json({ error: 'You have already completed your daily check-in today.' });
-        }
-      }
-    }
+    // --- REMOVED ONCE A DAY LIMIT FOR DAILY ASSESSMENT ---
+    // The user can now take multiple daily tests.
 
     // ---------------------------------------------------------------------------
     // Score assessment
@@ -209,7 +200,7 @@ router.post('/submit', async (req, res) => {
     });
   } catch (err) {
     console.error(err);
-    res.status(500).json({ error: 'Failed to submit assessment' });
+    res.status(500).json({ error: `Failed to submit assessment: ${err.message}` });
   }
 });
 

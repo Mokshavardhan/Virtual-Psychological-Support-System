@@ -12,6 +12,7 @@ export default function DailyAssessment() {
     const [questions, setQuestions] = useState<Question[]>([]);
     const [currentIndex, setCurrentIndex] = useState(0);
     const [answers, setAnswers] = useState<Record<string, number>>({});
+    const [result, setResult] = useState<{ score: number; severity: string } | null>(null);
 
     useEffect(() => {
         const loadAssessment = async () => {
@@ -43,11 +44,16 @@ export default function DailyAssessment() {
         e.preventDefault();
         setLoading(true);
         try {
-            await submitAssessment('daily', finalAnswers, questions);
-            // Redirect immediately to dashboard to reflect changes
-            navigate('/dashboard');
-        } catch (error) {
+            const res = await submitAssessment('daily', finalAnswers, questions);
+            // Show results instead of immediate redirect
+            setResult({
+                score: res.score || 0,
+                severity: res.severity || 'unknown'
+            });
+        } catch (error: any) {
             console.error('Failed to submit assessment', error);
+            alert(`Failed to submit assessment: ${error.message}`);
+        } finally {
             setLoading(false);
         }
     };
@@ -69,6 +75,39 @@ export default function DailyAssessment() {
 
     const currentQuestion = questions[currentIndex];
     const progress = ((currentIndex + 1) / questions.length) * 100;
+
+    if (result) {
+        return (
+            <div className="min-h-screen bg-gradient-to-br from-primary/5 to-purple-50 p-8 flex items-center justify-center">
+                <Card className="p-8 max-w-md w-full text-center animate-in fade-in zoom-in-95">
+                    <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-6">
+                        <span className="text-3xl">🎉</span>
+                    </div>
+                    <h2 className="text-3xl font-serif font-bold text-text mb-4">Assessment Complete</h2>
+                    <p className="text-muted mb-6">Thank you for checking in today.</p>
+                    
+                    <div className="bg-gray-50 rounded-xl p-6 mb-8 text-left space-y-4">
+                        <div>
+                            <p className="text-sm text-muted">Your Score</p>
+                            <p className="text-2xl font-bold text-primary">{result.score}</p>
+                        </div>
+                        <div>
+                            <p className="text-sm text-muted">Current Status</p>
+                            <p className="text-lg font-medium text-text capitalize">{result.severity.replace('-', ' ')}</p>
+                        </div>
+                    </div>
+
+                    <Button 
+                        size="lg" 
+                        className="w-full"
+                        onClick={() => navigate('/dashboard')}
+                    >
+                        Go to Dashboard
+                    </Button>
+                </Card>
+            </div>
+        );
+    }
 
     return (
         <div className="min-h-screen bg-gradient-to-br from-primary/5 to-purple-50 p-8">

@@ -16,7 +16,6 @@ export default function Dashboard() {
     const navigate = useNavigate();
     const [displayName, setDisplayName] = useState(authUser?.name?.split(' ')[0] || 'User');
     const [assessments, setAssessments] = useState<AssessmentResult[]>([]);
-    const [latestAssessment, setLatestAssessment] = useState<AssessmentResult | null>(null);
     const [hasCompletedToday, setHasCompletedToday] = useState(false);
     const [stats, setStats] = useState<DashboardStats | null>(null);
 
@@ -32,7 +31,6 @@ export default function Dashboard() {
             if (data.length > 0) {
                 const sorted = [...data].sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
                 const latest = sorted[0];
-                setLatestAssessment(latest);
 
                 // Check if completed today
                 const today = new Date().toDateString();
@@ -72,7 +70,7 @@ export default function Dashboard() {
                     avgMood={stats?.avgMood || 0}
                     hasCompletedToday={hasCompletedToday}
                     onStartAssessment={() => {
-                        if (!hasCompletedToday) navigate('/assessment/daily');
+                        navigate('/assessment/daily');
                     }}
                 />
             </div>
@@ -95,7 +93,7 @@ export default function Dashboard() {
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <MentalGarden latestAssessment={latestAssessment} />
+                <MentalGarden assessments={assessments} />
                 <MentalFitnessQuests />
             </div>
 

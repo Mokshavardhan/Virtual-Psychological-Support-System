@@ -20,7 +20,7 @@ const assessmentResultSchema = new mongoose.Schema({
         required: true // e.g., 'low', 'moderate', 'high'
     },
     answers: {
-        type: [Number], // Array of scores for individual questions
+        type: mongoose.Schema.Types.Mixed, // Array of scores or objects
         required: true
     },
     timestamp: {

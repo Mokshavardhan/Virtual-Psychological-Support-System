@@ -59,13 +59,6 @@ export const verifyIdToken = async (idToken) => {
       console.error('[Firebase Admin] Bypass failed to decode token:', e.message);
     }
 
-    if (idToken.startsWith('mock_')) {
-        return {
-            uid: idToken.replace('mock_', ''),
-            email: 'mock_user@example.com',
-            name: 'Mock User'
-        };
-    }
     throw new Error('Firebase Admin not initialized and token could not be decoded.');
   }
   return admin.auth().verifyIdToken(idToken);

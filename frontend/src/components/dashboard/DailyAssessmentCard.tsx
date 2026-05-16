@@ -14,8 +14,8 @@ export function DailyAssessmentCard({ daysActive, avgMood, hasCompletedToday, on
 
     return (
         <Card
-            className={`p-6 relative overflow-hidden group transition-all border-l-4 border-l-primary ${hasCompletedToday ? 'opacity-80 cursor-default' : 'hover:shadow-md cursor-pointer'}`}
-            onClick={hasCompletedToday ? undefined : onStartAssessment}
+            className={`p-6 relative overflow-hidden group transition-all border-l-4 border-l-primary hover:shadow-md cursor-pointer ${hasCompletedToday ? 'opacity-90' : ''}`}
+            onClick={onStartAssessment}
         >
             <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
                 <Activity size={80} className="text-primary" />
@@ -49,9 +49,9 @@ export function DailyAssessmentCard({ daysActive, avgMood, hasCompletedToday, on
                 </div>
             </div>
 
-            <div className="mt-4 pt-4 border-t border-gray-100 flex justify-between items-center text-xs text-muted">
+            <div className="mt-4 pt-4 border-t border-gray-100 flex justify-between items-center text-xs text-muted group-hover:text-primary transition-colors">
                 {hasCompletedToday ? (
-                    <span className="text-primary font-bold">✓ Completed today</span>
+                    <span className="font-bold">✓ Completed today (Click to take again)</span>
                 ) : (
                     <span>Click to start assessment</span>
                 )}

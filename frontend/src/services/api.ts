@@ -252,7 +252,16 @@ export async function submitAssessment(type: string, answers: Record<string, num
             body: JSON.stringify({ type, answers: answersArray }),
         });
 
-        if (!response.ok) throw new Error('Failed to submit assessment');
+        if (!response.ok) {
+            let errorMsg = 'Failed to submit assessment';
+            try {
+                const errorData = await response.json();
+                if (errorData.error) errorMsg = errorData.error;
+            } catch (e) {
+                // ignore
+            }
+            throw new Error(errorMsg);
+        }
 
         const data = await response.json();
 

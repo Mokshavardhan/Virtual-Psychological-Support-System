@@ -1,21 +1,27 @@
 import { useMemo } from 'react';
 import { Card } from '../ui/Card';
 import { Sprout } from 'lucide-react';
-import { cn, getNormalizedHealthScore } from '../../lib/utils';
+import { cn } from '../../lib/utils';
+import { getNormalizedHealthScore } from '../../lib/utils';
 import type { AssessmentResult } from '../../services/api';
 import { useAmbience } from '../../context/AmbienceContext';
 import { motion, AnimatePresence } from 'framer-motion';
 
 interface MentalGardenProps {
-    latestAssessment?: AssessmentResult | null;
+    assessments?: AssessmentResult[];
 }
 
-export default function MentalGarden({ latestAssessment }: MentalGardenProps) {
-    const hasData = !!latestAssessment;
+export default function MentalGarden({ assessments = [] }: MentalGardenProps) {
+    const hasData = assessments.length > 0;
     const { theme } = useAmbience();
 
+    const averageScore = useMemo(() => {
+        if (!hasData) return 50;
+        return Number((assessments.reduce((acc, curr) => acc + getNormalizedHealthScore(curr), 0) / assessments.length).toFixed(1));
+    }, [assessments, hasData]);
+
     const data = useMemo(() => {
-        const base = latestAssessment ? getNormalizedHealthScore(latestAssessment) : 50;
+        const base = averageScore;
 
         // Mapping psychological traits - normalized to 0-10 scale
         return [
@@ -24,7 +30,7 @@ export default function MentalGarden({ latestAssessment }: MentalGardenProps) {
             { name: 'Calmness', value: Math.min(10, (base + 10) / 10), icon: '🌊' },
             { name: 'Empathy', value: Math.min(10, (base * 1.1 + 10) / 10), icon: '❤️' },
         ];
-    }, [latestAssessment]);
+    }, [averageScore]);
 
     // Reduced size by 20% from original 360px
     const size = 288;  // Was 360, now 288 (80% of 360)
@@ -246,7 +252,7 @@ export default function MentalGarden({ latestAssessment }: MentalGardenProps) {
                                     className="text-center relative z-10"
                                 >
                                     <span className="text-[2rem] leading-none font-serif font-bold text-[#1a3a3a] tracking-tight">
-                                        {latestAssessment ? Math.round(getNormalizedHealthScore(latestAssessment)) : 0}%
+                                        {hasData ? Math.round(averageScore) : 0}%
                                     </span>
                                     <span className="block text-[0.6rem] font-normal text-emerald-600/50 uppercase tracking-[0.3em] -mt-1.5">
                                         Health

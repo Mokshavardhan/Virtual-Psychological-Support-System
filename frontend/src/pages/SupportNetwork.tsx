@@ -41,16 +41,16 @@ export default function SupportNetwork() {
                     </h3>
                     <ul className="space-y-3">
                         <li className="flex justify-between items-center p-3 bg-white/60 rounded-2xl border border-red-100 shadow-sm">
-                            <span className="font-medium">National Suicide Prevention</span>
-                            <span className="font-bold text-red-600 bg-red-100 px-3 py-1 rounded-lg">988</span>
+                            <span className="font-medium">Vandrevala Foundation</span>
+                            <span className="font-bold text-red-600 bg-red-100 px-3 py-1 rounded-lg">9999 666 555</span>
                         </li>
                         <li className="flex justify-between items-center p-3 bg-white/60 rounded-2xl border border-red-100 shadow-sm">
-                            <span className="font-medium">Crisis Text Line</span>
-                            <span className="font-bold text-red-600 bg-red-100 px-3 py-1 rounded-lg">Text HOME to 741741</span>
+                            <span className="font-medium">Aasra Helpline</span>
+                            <span className="font-bold text-red-600 bg-red-100 px-3 py-1 rounded-lg">9820466726</span>
                         </li>
                         <li className="flex justify-between items-center p-3 bg-white/60 rounded-2xl border border-red-100 shadow-sm">
                             <span className="font-medium">Emergency Services</span>
-                            <span className="font-bold text-red-600 bg-red-100 px-3 py-1 rounded-lg">911</span>
+                            <span className="font-bold text-red-600 bg-red-100 px-3 py-1 rounded-lg">112</span>
                         </li>
                     </ul>
                 </div>
@@ -62,12 +62,12 @@ export default function SupportNetwork() {
                     </h3>
                     <ul className="space-y-3">
                         <li className="flex justify-between items-center p-3 bg-white/60 rounded-2xl border border-blue-100 shadow-sm">
-                            <span className="font-medium">NAMI HelpLine</span>
-                            <span className="font-bold text-blue-600 bg-blue-100 px-3 py-1 rounded-lg">1-800-950-NAMI</span>
+                            <span className="font-medium">KIRAN Mental Health</span>
+                            <span className="font-bold text-blue-600 bg-blue-100 px-3 py-1 rounded-lg">1800-599-0019</span>
                         </li>
                         <li className="flex justify-between items-center p-3 bg-white/60 rounded-2xl border border-blue-100 shadow-sm">
-                            <span className="font-medium">Find Treatment (.gov)</span>
-                            <a href="https://findtreatment.gov" target="_blank" rel="noopener noreferrer" className="text-blue-600 underline text-sm hover:text-blue-800 font-medium">Visit Website</a>
+                            <span className="font-medium">NIMHANS Helpline</span>
+                            <span className="font-bold text-blue-600 bg-blue-100 px-3 py-1 rounded-lg">080-46110007</span>
                         </li>
                         <li className="flex justify-between items-center p-3 bg-white/60 rounded-2xl border border-blue-100 shadow-sm">
                             <span className="font-medium">Student Wellness</span>
