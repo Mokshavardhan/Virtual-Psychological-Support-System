@@ -219,7 +219,7 @@ router.post('/firebase', async (req, res, next) => {
     });
   } catch (err) {
     console.error('Firebase auth error:', err);
-    res.status(401).json({ error: 'Authentication failed' });
+    res.status(401).json({ error: err.message || 'Authentication failed' });
   }
 });
 
